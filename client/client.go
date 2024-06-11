@@ -36,13 +36,17 @@ func main() {
 	}
 	defer connection.Close()
 
-	connection.Write([]byte(fmt.Sprintf("Hello. A am %s\n", current_user.Username)))
+	_, err = connection.Write([]byte(fmt.Sprintf("Hello. A am %s\n", current_user.Username)))
+	if err != nil {
+		fmt.Printf("Failed to send hello message: %s\n", err)
+	}
 
 	go handle_connection(connection, current_user)
 
 	for {
 		buffer := make([]byte, 1024)
-		_, _, err := connection.ReadFromUDP(buffer)
+
+		_, err = connection.Read(buffer)
 		if err != nil {
 			fmt.Printf("Failed to read from UDP: %s\n", err)
 			os.Exit(-1)
@@ -59,12 +63,14 @@ func handle_connection(
 	stdin := bufio.NewReader(os.Stdin)
 	_ = current_user
 	for {
-		// fmt.Printf("%s: ", current_user.Username)
 		message, err := stdin.ReadBytes('\n')
 		if err != nil {
 			fmt.Printf("Failed to read from user input: %s\n", err)
 		}
 
-		connection.Write(message)
+		_, err = connection.Write(message)
+		if err != nil {
+			fmt.Printf("Error trying to write to a connection: %s\n", err)
+		}
 	}
 }

@@ -40,20 +40,19 @@ func main() {
 	if err != nil {
 		fmt.Printf("Failed to read from UDP: %s\n", err)
 	}
+	go handle_connection(connection, remote_address, current_user)
 
 	fmt.Printf("\rMessage: %s", buffer)
 	for {
-		// fmt.Printf("\033[A\r\033[KMessage: %s", buffer)
 		buffer = make([]byte, 1024)
-		_, err := connection.Read(buffer)
+
+		_, new_remote_address, err := connection.ReadFromUDP(buffer)
+		*remote_address = *new_remote_address
 		if err != nil {
 			fmt.Printf("Failed to read from UDP: %s\n", err)
 		}
 
 		fmt.Printf("\rMessage: %s", buffer)
-
-		go handle_connection(connection, remote_address, current_user)
-
 	}
 }
 
@@ -65,7 +64,6 @@ func handle_connection(
 	stdin := bufio.NewReader(os.Stdin)
 	_ = current_user
 	for {
-		// fmt.Printf("%s: ", current_user.Username)
 		message, err := stdin.ReadBytes('\n')
 		if err != nil {
 			fmt.Printf("Failed to read from user input: %s\n", err)
